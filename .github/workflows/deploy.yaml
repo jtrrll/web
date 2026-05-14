@@ -1,0 +1,41 @@
+name: Deploy
+'on':
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+concurrency:
+  cancel-in-progress: true
+  group: ${{ github.workflow }}
+env:
+  NIXPKGS_ALLOW_UNFREE: 1
+jobs:
+  deploy:
+    name: Deploy ${{ matrix.deployment }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free disk space
+        uses: endersonmenezes/free-disk-space@v3
+        with:
+          remove_dotnet: true
+          remove_haskell: true
+          remove_packages: azure-cli microsoft-edge-stable google-chrome-stable firefox postgresql* *llvm* mysql*
+          testing: false
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@v22
+        with:
+          extra-conf: |
+            extra-substituters = https://devenv.cachix.org https://install.determinate.systems https://nix-community.cachix.org
+            extra-trusted-public-keys = devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+      - name: Deploy ${{ matrix.deployment }}
+        run: nix run .#deploy -- ${{ matrix.deployment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        deployment:
+          - production

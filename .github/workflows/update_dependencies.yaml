@@ -1,0 +1,97 @@
+name: Update Dependencies
+on:
+  schedule:
+    - cron: "0 22 * * FRI"
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  flake:
+    name: Update flake dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@v22
+      - name: Update flake.lock
+        id: update
+        uses: DeterminateSystems/update-flake-lock@v28
+        with:
+          branch: "update_flake_lock_flake"
+          inputs: files flake-parts import-tree nixpkgs
+          pr-title: "deps: update flake dependencies"
+          pr-labels: |
+            automated
+            dependencies
+          token: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+      - name: Enable auto-merge
+        if: steps.update.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --squash
+  development:
+    name: Update development dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@v22
+      - name: Update flake.lock
+        id: update
+        uses: DeterminateSystems/update-flake-lock@v28
+        with:
+          branch: "update_flake_lock_development"
+          inputs: devenv justix snekcheck treefmt-nix
+          pr-title: "deps: update development dependencies"
+          pr-labels: |
+            automated
+            dependencies
+          token: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+      - name: Enable auto-merge
+        if: steps.update.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --squash
+  nixos:
+    name: Update NixOS dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@v22
+      - name: Update flake.lock
+        id: update
+        uses: DeterminateSystems/update-flake-lock@v28
+        with:
+          branch: "update_flake_lock_nixos"
+          inputs: determinate disko nixpkgs-nixos sops-nix
+          pr-title: "deps: update NixOS dependencies"
+          pr-labels: |
+            automated
+            dependencies
+          token: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+      - name: Enable auto-merge
+        if: steps.update.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --squash
+  infrastructure:
+    name: Update infrastructure dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DeterminateSystems/nix-installer-action@v22
+      - name: Update flake.lock
+        id: update
+        uses: DeterminateSystems/update-flake-lock@v28
+        with:
+          branch: "update_flake_lock_infrastructure"
+          inputs: terranix
+          pr-title: "deps: update infrastructure dependencies"
+          pr-labels: |
+            automated
+            dependencies
+          token: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+      - name: Enable auto-merge
+        if: steps.update.outputs.pull-request-number != ''
+        env:
+          GH_TOKEN: ${{ secrets.PR_BOT_PERSONAL_ACCESS_TOKEN }}
+        run: gh pr merge ${{ steps.update.outputs.pull-request-number }} --auto --squash

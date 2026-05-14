@@ -1,0 +1,66 @@
+layout {
+  default_tab_template {
+    pane {
+      borderless true
+      plugin {
+        location "zellij:tab-bar"
+      }
+      size 1
+    }
+    children
+    pane {
+      borderless true
+      plugin {
+        location "zellij:status-bar"
+      }
+      size 2
+    }
+  }
+  tab name="workspace" focus=true split_direction="vertical" {
+    pane size="50%" {
+      pane {
+        name ""
+        size "75%"
+        focus true
+      }
+      pane {
+        name "nix repl"
+        size "25%"
+        command "nix"
+        args "repl"
+      }
+    }
+    pane {
+      name "assistant"
+      size "25%"
+      command "opencode"
+    }
+    pane size="25%" {
+      pane {
+        name "git status"
+        size "50%"
+        command "watch"
+        args "--interval" "10" "--no-title" "--color" "git" "-c" "color.ui=always" "status" "--short"
+      }
+      pane {
+        name "just fmt"
+        size "50%"
+        command "just"
+        args "fmt"
+        start_suspended true
+      }
+    }
+  }
+  tab name="agent" {
+    pane {
+      name "agent"
+      size "80%"
+      command "opencode"
+      start_suspended true
+    }
+    pane {
+      name ""
+      size "20%"
+    }
+  }
+}

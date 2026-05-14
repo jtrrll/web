@@ -1,0 +1,7 @@
+keys:
+  - &vivi age1ts30p6segtp28zua4nzsh6ernkgz9n8qxn5njaruuy3sz2eu0s2s5q8ccl
+creation_rules:
+  - path_regex: modules/servers/vivi_secrets\.yaml$
+    key_groups:
+      - age:
+          - *vivi

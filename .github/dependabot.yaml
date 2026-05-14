@@ -1,0 +1,32 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    commit-message:
+      prefix: "deps"
+    directory: /
+    labels:
+      - automated
+      - dependencies
+      - github-actions
+    schedule:
+      interval: weekly
+  - package-ecosystem: gomod
+    commit-message:
+      prefix: "deps"
+    directory: /modules/portfolio/src
+    labels:
+      - automated
+      - dependencies
+      - go
+    schedule:
+      interval: weekly
+  - package-ecosystem: nix
+    commit-message:
+      prefix: "deps"
+    directory: /
+    labels:
+      - automated
+      - dependencies
+      - nix
+    schedule:
+      interval: weekly
