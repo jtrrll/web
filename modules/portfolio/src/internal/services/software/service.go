@@ -16,6 +16,7 @@ type RepositorySummary struct {
 	Thumbnail   string
 	Topics      []string
 	Languages   map[string]int
+	ReadmeHTML  string
 }
 
 // Service fetches and caches GitHub repository data.
@@ -57,6 +58,41 @@ func (s *Service) GetAllRepositorySummaries(ctx context.Context) <-chan []Reposi
 
 		select {
 		case ch <- data:
+		case <-ctx.Done():
+		}
+	}()
+	return ch
+}
+
+// GetRepositorySummary returns a channel that delivers a single repository's cached data.
+// Blocks until data is available if the initial fetch has not yet completed.
+// Returns nil on the channel if no repository with the given name exists.
+func (s *Service) GetRepositorySummary(ctx context.Context, name string) <-chan *RepositorySummary {
+	ch := make(chan *RepositorySummary, 1)
+	go func() {
+		defer close(ch)
+
+		s.cacheCond.L.Lock()
+		for !s.cacheReady {
+			s.cacheCond.Wait()
+		}
+		s.cacheCond.L.Unlock()
+
+		s.cacheMu.RLock()
+		defer s.cacheMu.RUnlock()
+
+		for i := range s.cachedData {
+			if s.cachedData[i].Name == name {
+				select {
+				case ch <- &s.cachedData[i]:
+				case <-ctx.Done():
+				}
+				return
+			}
+		}
+
+		select {
+		case ch <- nil:
 		case <-ctx.Done():
 		}
 	}()
@@ -114,12 +150,19 @@ func (s *Service) fetchAndCache(ctx context.Context) error {
 				return err
 			}
 
+			readmeHTML, err := s.getRenderedReadmeForRepository(ctx, repo.GetOwner().GetLogin(), repo.GetName())
+			if err != nil {
+				slog.WarnContext(ctx, "failed to fetch README", "repo", repo.GetName(), "error", err)
+				readmeHTML = ""
+			}
+
 			summaries[i] = RepositorySummary{
 				Name:        repo.GetName(),
 				Description: repo.GetDescription(),
 				Thumbnail:   thumbnail,
 				Topics:      repo.Topics,
 				Languages:   languages,
+				ReadmeHTML:  readmeHTML,
 			}
 			return nil
 		})
