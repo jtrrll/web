@@ -9,9 +9,7 @@ import (
 	"golang.org/x/net/html"
 )
 
-var client = github.NewClient(nil)
-
-func GetThumbnailForRepository(ctx context.Context, owner string, repo string) (string, error) {
+func (s *Service) getThumbnailForRepository(ctx context.Context, owner string, repo string) (string, error) {
 	url := fmt.Sprintf("https://github.com/%s/%s", owner, repo)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
@@ -65,15 +63,15 @@ func GetThumbnailForRepository(ctx context.Context, owner string, repo string) (
 	}
 }
 
-func ListRepositoriesForUser(ctx context.Context, user string) ([]*github.Repository, error) {
-	repos, _, err := client.Repositories.ListByUser(ctx, user, &github.RepositoryListByUserOptions{Sort: "pushed", Type: "sources"})
+func (s *Service) listRepositoriesForUser(ctx context.Context) ([]*github.Repository, error) {
+	repos, _, err := s.client.Repositories.ListByUser(ctx, s.user, &github.RepositoryListByUserOptions{Sort: "pushed", Type: "sources"})
 	return repos, err
 }
 
-func ListLanguagesForRepository(ctx context.Context, owner string, repo string) (map[string]int, error) {
-	if languages, _, err := client.Repositories.ListLanguages(ctx, owner, repo); err != nil {
+func (s *Service) listLanguagesForRepository(ctx context.Context, owner string, repo string) (map[string]int, error) {
+	languages, _, err := s.client.Repositories.ListLanguages(ctx, owner, repo)
+	if err != nil {
 		return nil, err
-	} else {
-		return languages, nil
 	}
+	return languages, nil
 }

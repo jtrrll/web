@@ -18,29 +18,42 @@ type RepositorySummary struct {
 	Languages   map[string]int
 }
 
-var (
+// Service fetches and caches GitHub repository data.
+type Service struct {
+	client *github.Client
+	user   string
+
 	cacheMu    sync.RWMutex
 	cachedData []RepositorySummary
 	cacheReady bool
-	cacheCond  = sync.NewCond(&sync.Mutex{})
-)
+	cacheCond  *sync.Cond
+}
+
+// NewService creates a Service that fetches repositories for the given GitHub user.
+func NewService(user string) *Service {
+	return &Service{
+		client:    github.NewClient(nil),
+		user:      user,
+		cacheCond: sync.NewCond(&sync.Mutex{}),
+	}
+}
 
 // GetAllRepositorySummaries returns a channel that delivers cached repository data.
 // Blocks until data is available if the initial fetch has not yet completed.
-func GetAllRepositorySummaries(ctx context.Context) <-chan []RepositorySummary {
+func (s *Service) GetAllRepositorySummaries(ctx context.Context) <-chan []RepositorySummary {
 	ch := make(chan []RepositorySummary, 1)
 	go func() {
 		defer close(ch)
 
-		cacheCond.L.Lock()
-		for !cacheReady {
-			cacheCond.Wait()
+		s.cacheCond.L.Lock()
+		for !s.cacheReady {
+			s.cacheCond.Wait()
 		}
-		cacheCond.L.Unlock()
+		s.cacheCond.L.Unlock()
 
-		cacheMu.RLock()
-		data := cachedData
-		cacheMu.RUnlock()
+		s.cacheMu.RLock()
+		data := s.cachedData
+		s.cacheMu.RUnlock()
 
 		select {
 		case ch <- data:
@@ -52,9 +65,9 @@ func GetAllRepositorySummaries(ctx context.Context) <-chan []RepositorySummary {
 
 // StartBackgroundRefresh fetches GitHub data immediately and then on the given interval.
 // Blocks until ctx is cancelled.
-func StartBackgroundRefresh(ctx context.Context, interval time.Duration) {
+func (s *Service) StartBackgroundRefresh(ctx context.Context, interval time.Duration) {
 	slog.InfoContext(ctx, "fetching initial software data")
-	if err := fetchAndCache(ctx); err != nil {
+	if err := s.fetchAndCache(ctx); err != nil {
 		slog.ErrorContext(ctx, "initial software data fetch failed", "error", err)
 	}
 
@@ -67,15 +80,15 @@ func StartBackgroundRefresh(ctx context.Context, interval time.Duration) {
 			return
 		case <-ticker.C:
 			slog.InfoContext(ctx, "refreshing software data")
-			if err := fetchAndCache(ctx); err != nil {
+			if err := s.fetchAndCache(ctx); err != nil {
 				slog.ErrorContext(ctx, "software data refresh failed", "error", err)
 			}
 		}
 	}
 }
 
-func fetchAndCache(ctx context.Context) error {
-	allRepos, err := ListRepositoriesForUser(ctx, "jtrrll")
+func (s *Service) fetchAndCache(ctx context.Context) error {
+	allRepos, err := s.listRepositoriesForUser(ctx)
 	if err != nil {
 		return err
 	}
@@ -91,12 +104,12 @@ func fetchAndCache(ctx context.Context) error {
 	g, ctx := errgroup.WithContext(ctx)
 	for i, repo := range repos {
 		g.Go(func() error {
-			thumbnail, err := GetThumbnailForRepository(ctx, repo.GetOwner().GetLogin(), repo.GetName())
+			thumbnail, err := s.getThumbnailForRepository(ctx, repo.GetOwner().GetLogin(), repo.GetName())
 			if err != nil {
 				return err
 			}
 
-			languages, err := ListLanguagesForRepository(ctx, repo.GetOwner().GetLogin(), repo.GetName())
+			languages, err := s.listLanguagesForRepository(ctx, repo.GetOwner().GetLogin(), repo.GetName())
 			if err != nil {
 				return err
 			}
@@ -116,14 +129,14 @@ func fetchAndCache(ctx context.Context) error {
 		return err
 	}
 
-	cacheMu.Lock()
-	cachedData = summaries
-	cacheMu.Unlock()
+	s.cacheMu.Lock()
+	s.cachedData = summaries
+	s.cacheMu.Unlock()
 
-	cacheCond.L.Lock()
-	cacheReady = true
-	cacheCond.Broadcast()
-	cacheCond.L.Unlock()
+	s.cacheCond.L.Lock()
+	s.cacheReady = true
+	s.cacheCond.Broadcast()
+	s.cacheCond.L.Unlock()
 
 	return nil
 }

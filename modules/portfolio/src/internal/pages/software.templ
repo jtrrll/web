@@ -7,11 +7,11 @@ import "regexp"
 import "slices"
 import "strings"
 
-templ Software() {
+templ Software(svc *software.Service) {
 	@components.Layout("Software - Jackson Terrill", "Jackson Terrill's software projects") {
 		@components.Header("Software", "By Jackson Terrill")
 		{{
-			data := software.GetAllRepositorySummaries(ctx)
+			data := svc.GetAllRepositorySummaries(ctx)
 		}}
 		<div>
 			@templ.Flush() {

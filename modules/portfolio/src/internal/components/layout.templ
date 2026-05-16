@@ -53,7 +53,12 @@ templ navbar(links ...navLink) {
 			<a href="/" preload class="clickable logo">
 				jtrrll
 			</a>
-			<ul>
+			<button class="navbar-toggle" aria-label="Toggle navigation" aria-expanded="false">
+				<span class="navbar-toggle-bar"></span>
+				<span class="navbar-toggle-bar"></span>
+				<span class="navbar-toggle-bar"></span>
+			</button>
+			<ul class="navbar-links">
 				for _, link := range links {
 					<li>
 						<a href={ link.href } preload class="clickable">
@@ -80,7 +85,27 @@ templ navbar(links ...navLink) {
 			></div>
 		</div>
 		@loadingBarManager()
+		@navbarToggleManager()
 	</div>
+}
+
+var navbarToggleHandle = templ.NewOnceHandle()
+
+// Manages the hamburger menu toggle behavior.
+templ navbarToggleManager() {
+	@navbarToggleHandle.Once() {
+		<script>
+			document.querySelectorAll('.navbar-toggle').forEach((toggle) => {
+				toggle.addEventListener('click', () => {
+					const nav = toggle.closest('nav');
+					const links = nav.querySelector('.navbar-links');
+					const expanded = toggle.getAttribute('aria-expanded') === 'true';
+					toggle.setAttribute('aria-expanded', String(!expanded));
+					links.classList.toggle('open');
+				});
+			});
+		</script>
+	}
 }
 
 var loadingBarHandle = templ.NewOnceHandle()
