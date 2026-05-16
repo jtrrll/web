@@ -57,7 +57,7 @@ func NewRouter(logger *slog.Logger, trustProxy bool, softwareSvc *software.Servi
 	pagesRouter.GET("/interactive", handlers.TemplPage(pages.Interactive()))
 	pagesRouter.GET("/software", handlers.TemplPage(pages.Software(softwareSvc)))
 	pagesRouter.GET("/software/:name", func(c echo.Context) error {
-		return handlers.TemplPage(pages.SoftwareProject(c.Param("name")))(c)
+		return handlers.TemplPage(pages.SoftwareProject(softwareSvc, c.Param("name")))(c)
 	})
 	pagesRouter.GET("/visual", handlers.TemplPage(pages.Visual()))
 
