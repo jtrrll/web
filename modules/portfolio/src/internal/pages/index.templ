@@ -14,19 +14,18 @@ var links = []struct {
 templ Index() {
 	@components.Layout("Jackson Terrill", "Jackson Terrill's personal portfolio") {
 		@components.Header("Jackson\nTerrill", "Developer + Creator")
-		<div style="display: flex;">
+		<div class="hero">
 			<img
 				src="https://avatars.githubusercontent.com/u/77407057"
 				alt="Jackson Terrill"
-				style="height: 100%; width: 15rem;"
 			/>
-			<div style="margin-left: 2rem; max-width: 36rem;">
+			<div class="hero-content">
 				<p style="border-left-width: 2px; padding-left: 1rem;">
 					I'm a software engineer obsessed with creating.
 					When I'm not building solutions or optimizing workflows, I'm making video games or recording music.
 					Explore this collection of my work and contact me if you want to create something together.
 				</p>
-				<div style="display: flex; justify-content: space-evenly; padding: 1rem;">
+				<div class="hero-links">
 					for _, link := range links {
 						<a href={ link.href } class="clickable" style="align-items: center; background-color: var(--color-dark); color: var(--color-light); display: flex; justify-content: space-evenly; padding: 0 1.5rem;">
 							{ link.text }

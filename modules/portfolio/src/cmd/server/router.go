@@ -9,6 +9,7 @@ import (
 	"github.com/jtrrll/portfolio/internal/handlers"
 	"github.com/jtrrll/portfolio/internal/middleware"
 	"github.com/jtrrll/portfolio/internal/pages"
+	"github.com/jtrrll/portfolio/internal/services/software"
 	slogecho "github.com/samber/slog-echo"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho"
 
@@ -20,7 +21,7 @@ import (
 var staticAssets embed.FS
 
 // NewRouter creates an HTTP request handler with routing and middleware.
-func NewRouter(logger *slog.Logger, trustProxy bool) http.Handler {
+func NewRouter(logger *slog.Logger, trustProxy bool, softwareSvc *software.Service) http.Handler {
 	globalRouter := echo.New()
 
 	if trustProxy {
@@ -54,7 +55,7 @@ func NewRouter(logger *slog.Logger, trustProxy bool) http.Handler {
 	pagesRouter.GET("/", handlers.TemplPage(pages.Index()))
 	pagesRouter.GET("/audio", handlers.TemplPage(pages.Audio()))
 	pagesRouter.GET("/interactive", handlers.TemplPage(pages.Interactive()))
-	pagesRouter.GET("/software", handlers.TemplPage(pages.Software()))
+	pagesRouter.GET("/software", handlers.TemplPage(pages.Software(softwareSvc)))
 	pagesRouter.GET("/software/:name", func(c echo.Context) error {
 		return handlers.TemplPage(pages.SoftwareProject(c.Param("name")))(c)
 	})

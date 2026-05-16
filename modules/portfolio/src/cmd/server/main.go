@@ -55,16 +55,17 @@ func main() {
 			}()
 
 			// Start background data fetcher.
+			softwareSvc := software.NewService("jtrrll")
 			fetchDone := make(chan struct{})
 			go func() {
-				software.StartBackgroundRefresh(ctx, 1*time.Hour)
+				softwareSvc.StartBackgroundRefresh(ctx, 1*time.Hour)
 				close(fetchDone)
 			}()
 
 			// Start HTTP server.
 			srv := server.New(
 				server.WithPort(cmd.Uint("port")),
-				server.WithHandler(NewRouter(logger, cmd.Bool("trust-proxy"))),
+				server.WithHandler(NewRouter(logger, cmd.Bool("trust-proxy"), softwareSvc)),
 			)
 			srvErr := make(chan error, 1)
 			go func() {
