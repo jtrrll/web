@@ -40,9 +40,9 @@ _: {
                   address = "5.161.233.216";
                 }
                 {
-                  hostname = "www";
-                  type = "CNAME";
-                  address = "jtrrll.com.";
+                  hostname = "*";
+                  type = "A";
+                  address = "5.161.233.216";
                 }
               ];
             };
@@ -58,9 +58,9 @@ _: {
                   address = "5.161.233.216";
                 }
                 {
-                  hostname = "www";
-                  type = "CNAME";
-                  address = "jacksonterrill.com.";
+                  hostname = "*";
+                  type = "A";
+                  address = "5.161.233.216";
                 }
               ];
             };
