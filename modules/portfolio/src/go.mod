@@ -3,7 +3,7 @@ module github.com/jtrrll/portfolio
 go 1.25.5
 
 require (
-	github.com/a-h/templ v0.3.1001
+	github.com/a-h/templ v0.3.1020
 	github.com/google/go-github/v76 v76.0.0
 	github.com/labstack/echo/v4 v4.15.1
 	github.com/samber/slog-echo v1.21.0
