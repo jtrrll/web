@@ -114,11 +114,19 @@
               overlays.enable = true;
               packages = {
                 enable = true;
-                any.attr = {
-                  # Remove deprecated packages that devenv includes.
-                  devenv-test.enable = false;
-                  devenv-up.enable = false;
-                };
+                # Remove the deprecated `*-devenv-test` / `*-devenv-up`
+                # packages that devenv generates for each shell, and the
+                # terranix `*-tf` wrappers (kept as apps, not packages).
+                any.any =
+                  { attrName, lib, ... }:
+                  {
+                    enable =
+                      !(
+                        lib.hasInfix "devenv-test" attrName
+                        || lib.hasInfix "devenv-up" attrName
+                        || lib.hasSuffix "-tf" attrName
+                      );
+                  };
               };
               # keep-sorted end
             };
