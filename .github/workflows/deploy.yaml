@@ -22,7 +22,7 @@ jobs:
           remove_packages: azure-cli microsoft-edge-stable google-chrome-stable firefox postgresql* *llvm* mysql*
           testing: false
       - uses: actions/checkout@v6
-      - uses: DeterminateSystems/nix-installer-action@v22
+      - uses: DeterminateSystems/nix-installer-action@v23
         with:
           extra-conf: |
             extra-substituters = https://devenv.cachix.org https://install.determinate.systems https://nix-community.cachix.org
