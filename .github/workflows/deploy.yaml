@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Free disk space
-        uses: endersonmenezes/free-disk-space@v3
+        uses: endersonmenezes/free-disk-space@v4
         with:
           remove_dotnet: true
           remove_haskell: true
