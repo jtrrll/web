@@ -4,25 +4,23 @@
   inputs = {
     ### Flake dependencies ###
     # keep-sorted start block=yes
-    files.url = "github:mightyiam/files/main";
+    files = {
+      flake = false;
+      url = "github:mightyiam/files/master";
+    };
     flake-parts.url = "github:hercules-ci/flake-parts/main";
-    import-tree.url = "github:vic/import-tree/main";
+    nix-lib = {
+      flake = false;
+      url = "github:jtrrll/nix-lib/main";
+    };
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     # keep-sorted end
 
     ### Development dependencies ###
     # keep-sorted start block=yes
     devenv.url = "github:cachix/devenv/main";
-    justix = {
-      inputs.nixpkgs.follows = "devenv/nixpkgs";
-      url = "github:jtrrll/justix/main";
-    };
-    snekcheck = {
-      inputs.nixpkgs.follows = "devenv/nixpkgs";
-      url = "github:jtrrll/snekcheck/main";
-    };
     treefmt-nix = {
-      inputs.nixpkgs.follows = "devenv/nixpkgs";
+      flake = false;
       url = "github:numtide/treefmt-nix/main";
     };
     # keep-sorted end
@@ -31,11 +29,14 @@
     # keep-sorted start block=yes
     determinate.url = "github:DeterminateSystems/determinate/main";
     disko = {
-      inputs.nixpkgs.follows = "nixpkgs-nixos";
+      flake = false;
       url = "github:nix-community/disko/master";
     };
     nixpkgs-nixos.url = "github:NixOS/nixpkgs/nixos-unstable";
-    sops-nix.url = "github:Mic92/sops-nix/master";
+    sops-nix = {
+      flake = false;
+      url = "github:Mic92/sops-nix/master";
+    };
     # keep-sorted end
 
     ### Infrastructure dependencies ###
@@ -45,51 +46,83 @@
   };
 
   outputs =
-    {
-      flake-parts,
-      import-tree,
-      ...
-    }@inputs:
-    flake-parts.lib.mkFlake { inherit inputs; } (
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } (
       {
         config,
         lib,
         ...
       }:
       let
-        modules-tree = lib.pipe import-tree [
-          (it: it.withLib lib)
-          (it: it.addPath ./modules)
-          (it: it.filterNot (lib.hasInfix "/by_name/"))
-        ];
+        nix-lib = import inputs.nix-lib { inherit lib; };
+        inherit (nix-lib.lib.modules) aggregate modulesByClassAndName;
+        inherit (nix-lib.lib.strings) snakeToCamel;
+
+        modules = lib.mapAttrs (_: aggregate) (modulesByClassAndName {
+          path = ./modules;
+          transform = class: name: module: {
+            class = snakeToCamel class;
+            name = lib.replaceStrings [ "_" ] [ "-" ] name;
+            inherit module;
+          };
+        });
+
+        cfg = modulesByClassAndName {
+          path = ./cfg;
+          transform = class: name: module: {
+            class = snakeToCamel class;
+            name = lib.replaceStrings [ "_" ] [ "-" ] name;
+            inherit module;
+          };
+        };
       in
       {
         imports = [
-          inputs.flake-parts.flakeModules.flakeModules
+          inputs.devenv.flakeModule
+          (inputs.files + "/flake-module.nix")
+          inputs.flake-parts.flakeModules.modules
+          inputs.flake-parts.flakeModules.touchup
           inputs.terranix.flakeModule
-          modules-tree.result
-        ];
-
-        options = {
-          flake.lib = lib.mkOption {
-            type = lib.types.attrsOf lib.types.anything;
-            default = { };
-            description = "A top-level library";
-          };
-        };
+          (inputs.treefmt-nix + "/flake-module.nix")
+          nix-lib.modules.flake.default
+        ]
+        ++ lib.attrValues (cfg.flake or { });
 
         config = {
+          _module.args.cfg = cfg;
           flake = {
-            lib = {
-              inherit modules-tree;
-            };
-            flakeModules = config.flake.modules.flake // {
-              default = {
-                imports = lib.attrValues config.flake.modules.flake;
+            inherit modules;
+            nixosModules = config.flake.modules.nixos or { };
+          };
+          systems = [
+            # keep-sorted start
+            "aarch64-darwin"
+            "aarch64-linux"
+            "x86_64-linux"
+            # keep-sorted end
+          ];
+          touchup = {
+            any.enable = lib.mkDefault false;
+            attr = {
+              # keep-sorted start block=yes
+              apps.enable = true;
+              checks.enable = true;
+              devShells.enable = true;
+              formatter.enable = true;
+              nixosConfigurations.enable = true;
+              nixosModules.enable = true;
+              overlays.enable = true;
+              packages = {
+                enable = true;
+                any.attr = {
+                  # Remove deprecated packages that devenv includes.
+                  devenv-test.enable = false;
+                  devenv-up.enable = false;
+                };
               };
+              # keep-sorted end
             };
           };
-          systems = lib.systems.flakeExposed;
         };
       }
     );

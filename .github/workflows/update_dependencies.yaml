@@ -18,7 +18,7 @@ jobs:
         uses: DeterminateSystems/update-flake-lock@v28
         with:
           branch: "update_flake_lock_flake"
-          inputs: files flake-parts import-tree nixpkgs
+          inputs: files flake-parts nix-lib nixpkgs
           pr-title: "deps: update flake dependencies"
           pr-labels: |
             automated
@@ -40,7 +40,7 @@ jobs:
         uses: DeterminateSystems/update-flake-lock@v28
         with:
           branch: "update_flake_lock_development"
-          inputs: devenv justix snekcheck treefmt-nix
+          inputs: devenv treefmt-nix
           pr-title: "deps: update development dependencies"
           pr-labels: |
             automated
