@@ -34,7 +34,7 @@ New servers are provisioned with [nixos-anywhere](https://github.com/nix-communi
 This installs NixOS on a server that is reachable via SSH (e.g., a fresh VPS booted into a rescue system or any Linux install with root access).
 
 ```sh
-nix run github:nix-community/nixos-anywhere -- --flake .#<hostname> root@<ip> --generate-hardware-config nixos-generate-config ./modules/servers/<hostname>/hardware-configuration.nix
+nix run github:nix-community/nixos-anywhere -- --flake .#<hostname> root@<ip> --generate-hardware-config nixos-generate-config ./cfg/nixos/<hostname>/hardware-configuration.nix
 ```
 
 Disko defines the disk layout and will be applied automatically.
@@ -74,7 +74,7 @@ ssh-keyscan -p 2222 <server-ip> 2>/dev/null | grep ed25519 | ssh-to-age
 keys:
   - &<hostname> <age-public-key>
 creation_rules:
-  - path_regex: modules/servers/<hostname>_secrets\.yaml$
+  - path_regex: cfg/nixos/<hostname>/secrets\.yaml$
     key_groups:
       - age:
         - *<hostname>
@@ -83,7 +83,7 @@ creation_rules:
 ### 3. Create or edit the encrypted secrets file
 
 ```sh
-sops modules/servers/<hostname>_secrets.yaml
+sops cfg/nixos/<hostname>/secrets.yaml
 ```
 
 This opens an editor where you enter secrets in plaintext.
@@ -101,7 +101,7 @@ The decrypted secret is available at `config.sops.secrets.my_secret.path`.
 ## Infrastructure
 
 Infrastructure is managed with [terranix](https://terranix.org/) (Terraform via Nix).
-Resources are defined in `modules/hetzner/`, `modules/github/`, `modules/namecheap/`, and `modules/servers/`.
+Resources are defined in `cfg/flake/hetzner.nix`, `cfg/flake/github/`, `cfg/flake/namecheap.nix`, and `cfg/flake/servers/`.
 State is managed locally.
 
 ### Hetzner

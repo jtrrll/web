@@ -1,10 +1,10 @@
 <!--
 Before opening a pull request, please ensure you've done the following:
 
-- Created a small PR.
-- Used a descriptive title.
-- Tested changes manually and provided tests for your changes (if applicable).
-- Updated relevant documentation.
+- 👷‍♀️ Created a small PR.
+- 📝 Used a descriptive title.
+- ✅ Tested changes manually and provided tests for your changes (if applicable).
+- 📗 Updated relevant documentation.
 -->
 
 # Description
