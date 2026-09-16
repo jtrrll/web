@@ -15,7 +15,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v22
       - name: Update flake.lock
         id: update
-        uses: DeterminateSystems/update-flake-lock@v28
+        uses: DeterminateSystems/update-flake-lock@v29
         with:
           branch: "update_flake_lock_flake"
           inputs: files flake-parts nix-lib nixpkgs
@@ -37,7 +37,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v22
       - name: Update flake.lock
         id: update
-        uses: DeterminateSystems/update-flake-lock@v28
+        uses: DeterminateSystems/update-flake-lock@v29
         with:
           branch: "update_flake_lock_development"
           inputs: devenv treefmt-nix
@@ -59,7 +59,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v22
       - name: Update flake.lock
         id: update
-        uses: DeterminateSystems/update-flake-lock@v28
+        uses: DeterminateSystems/update-flake-lock@v29
         with:
           branch: "update_flake_lock_nixos"
           inputs: determinate disko nixpkgs-nixos sops-nix
@@ -81,7 +81,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@v22
       - name: Update flake.lock
         id: update
-        uses: DeterminateSystems/update-flake-lock@v28
+        uses: DeterminateSystems/update-flake-lock@v29
         with:
           branch: "update_flake_lock_infrastructure"
           inputs: terranix
